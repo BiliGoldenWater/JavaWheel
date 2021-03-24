@@ -55,9 +55,7 @@ public class I18nManager {
 
         File[] files = languageFilePath.listFiles(file -> file.getName().endsWith(".json"));// 获取目录下所有json文件
 
-        if (files == null) {
-            return StatusCode.success;
-        }
+        if (files == null) return StatusCode.success;
 
         for (File file : files) {
             if (!file.canRead()) return StatusCode.failToRead;
@@ -70,7 +68,7 @@ public class I18nManager {
                 Map<String, String> lang = gson.fromJson(jsonStr, new TypeToken<Map<String, String>>() {
                 }.getType());
 
-                languages.put(file.getName().replaceAll(".json", "").toLowerCase(), lang);
+                languages.put(file.getName().replaceAll("\\.json", "").toLowerCase(), lang);
             } catch (IOException e) {
                 e.printStackTrace();
             }
