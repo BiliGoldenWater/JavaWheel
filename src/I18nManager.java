@@ -11,8 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class I18nManager {
     private final Map<String, Map<String, String>> languages = new HashMap<>();
@@ -54,10 +53,7 @@ public class I18nManager {
         }
         if (!languageFilePath.isDirectory()) return StatusCode.pathError; // 如果不是一个目录则返回错误
 
-        File[] files = languageFilePath.listFiles(file -> { // 获取目录下所有json文件
-            String fileName = file.getName();
-            return fileName.endsWith(".json");
-        });
+        File[] files = languageFilePath.listFiles(file -> file.getName().endsWith(".json"));// 获取目录下所有json文件
 
         if (files == null) {
             return StatusCode.success;
@@ -102,30 +98,37 @@ public class I18nManager {
 
     public void releaseDefaultLangFile(JavaPlugin plugin, String folderInJar,
                                        String langListFileName, boolean replace) {
-        InputStream inputStream = plugin.getResource(folderInJar + "/" + langListFileName);
+        InputStream inputStream = plugin.getResource(folderInJar + "/" + langListFileName); // 获取语言列表文件
 
-        if (inputStream == null) return;
+        if (inputStream == null) return; // 如果为空则退出
 
         try {
-            int fileLength = inputStream.available();
-            byte[] data = new byte[fileLength];
+            int fileLength = inputStream.available(); // 获取文件长度
+            byte[] data = new byte[fileLength]; // 分配数据缓存
 
-            if (inputStream.read(data) != -1) {
+            if (inputStream.read(data) != -1) { // 如果有数据
                 String jsonStr;
 
-                jsonStr = new String(data, StandardCharsets.UTF_8);
+                jsonStr = new String(data, StandardCharsets.UTF_8); // byte转字符串
                 jsonStr = jsonStr.replaceAll("\n", "")
-                        .replaceAll("\r", "");
+                        .replaceAll("\r", ""); // 去除 LF 和 CR
 
                 Map<String, String[]> languages =
                         gson.fromJson(jsonStr, new TypeToken<Map<String, String[]>>() {
-                        }.getType());
+                        }.getType()); // 读取json至Map
 
-                for (String langCode : languages.get("languages")) {
-                    plugin.saveResource(folderInJar + "/" + langCode + ".json", replace);
+                String[] fileNameArrays = dataPath.list((dir, name) -> name.endsWith(".json")); // 获取现有语言文件名数组
+                List<String> fileNameList = new ArrayList<>(); // 初始化文件名 List
+                if (fileNameArrays != null) fileNameList = Arrays.asList(fileNameArrays); //如果文件列表不为空 转至List
+
+                for (String langCode : languages.get("languages")) { // 遍历所有语言
+                    if (!fileNameList.contains(langCode + ".json")) { // 如果文件不存在则
+                        plugin.saveResource(folderInJar + "/" + langCode + ".json",
+                                replace); // 释放相应文件
+                    }
                 }
 
-                this.reload();
+                this.reload(); // 重载
             }
         } catch (IOException ignored) {
         }
