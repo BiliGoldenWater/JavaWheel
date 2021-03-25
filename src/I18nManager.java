@@ -21,7 +21,6 @@ public class I18nManager {
 
     private final Gson gson = new Gson();
 
-
     public I18nManager(File dataPath, String langFolder, String defaultLanguage) {
         this(new File(dataPath.getPath(), langFolder), defaultLanguage);
     }
@@ -120,7 +119,7 @@ public class I18nManager {
                 if (fileNameArrays != null) fileNameList = Arrays.asList(fileNameArrays); //如果文件列表不为空 转至List
 
                 for (String langCode : languages.get("languages")) { // 遍历所有语言
-                    if (!fileNameList.contains(langCode + ".json")) { // 如果文件不存在则
+                    if (!fileNameList.contains(langCode + ".json") || replace) { // 如果 文件不存在 或 启用强制替换 则
                         plugin.saveResource(folderInJar + "/" + langCode + ".json",
                                 replace); // 释放相应文件
                     }
@@ -130,6 +129,15 @@ public class I18nManager {
             }
         } catch (IOException ignored) {
         }
+    }
+
+    public List<String> getLanguageList(){
+        List<String> languageList = new ArrayList<>();
+
+        if (!initialized) return languageList; // 检查 初始化 是否完成
+
+        languageList = Arrays.asList(languages.keySet().toArray(new String[]{}));
+        return languageList;
     }
 
     public void reload() {
