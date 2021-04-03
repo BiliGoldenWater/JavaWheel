@@ -131,7 +131,7 @@ public class I18nManager {
         }
     }
 
-    public List<String> getLanguageList(){
+    public List<String> getLanguageList() {
         List<String> languageList = new ArrayList<>();
 
         if (!initialized) return languageList; // 检查 初始化 是否完成
