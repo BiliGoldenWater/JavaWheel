@@ -1,7 +1,9 @@
-package io.github.biligoldenwater.atsomeone.utils;
+package indi.goldenwater.essentialstpclickaccept.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.Configuration;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -138,6 +140,51 @@ public class I18nManager {
 
         languageList = Arrays.asList(languages.keySet().toArray(new String[]{}));
         return languageList;
+    }
+
+    public void setLanguage(JavaPlugin plugin,
+                            CommandSender sender,
+                            String lang,
+                            String targetLanguage,
+                            String configKey,
+                            String langKeyList,
+                            String langKeySuccessSet,
+                            String langKeySetFail,
+                            String langKeySetFailDoesNotExist) {
+        if (targetLanguage == null) {
+            List<String> languageList = this.getLanguageList();
+            StringBuilder languageListStr = new StringBuilder();
+
+            for (String str : languageList) { // 将语言列表转为字符串
+                boolean isLast = str.equals(languageList.get(languageList.size() - 1));
+                languageListStr.append(str).append(isLast ? "." : ", ");
+            }
+
+            String finalMessage = this.getL10n(lang, langKeyList)
+                    .replace("{{languages}}", languageListStr.toString()); // 将语言列表放入消息
+
+            sender.sendMessage(finalMessage);
+        } else {
+            String message;
+            if (this.getLanguageList().contains(targetLanguage.toLowerCase())) {
+                Configuration config = plugin.getConfig();
+
+                config.set(configKey, targetLanguage);
+                plugin.saveConfig();
+
+                lang = config.getString(configKey);
+
+                message = this.getL10n(lang, langKeySuccessSet);
+            } else {
+                message = this.getL10n(lang, langKeySetFail);
+                message += "\n    ";
+                message += this.getL10n(lang, langKeySetFailDoesNotExist);
+            }
+
+            message = message.replace("{{language}}", targetLanguage);
+
+            sender.sendMessage(message);
+        }
     }
 
     public void reload() {
