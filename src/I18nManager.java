@@ -1,4 +1,4 @@
-package indi.goldenwater.essentialstpclickaccept.utils;
+package indi.goldenwater.healthdisplay.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
