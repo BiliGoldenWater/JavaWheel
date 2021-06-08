@@ -1,4 +1,4 @@
-package indi.goldenwater.autospectator.utils;
+package indi.goldenwater.healthdisplay.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -206,6 +206,10 @@ public class I18nManager {
 
         public String l(String key) {
             return this.i18nManager.getL10n(this.language, key);
+        }
+
+        public String getLanguage() {
+            return language;
         }
     }
 
