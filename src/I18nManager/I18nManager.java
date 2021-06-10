@@ -1,4 +1,4 @@
-package indi.goldenwater.healthdisplay.utils;
+package indi.goldenwater.deathswap.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -23,14 +23,27 @@ public class I18nManager {
 
     private final Gson gson = new Gson();
 
+    /**
+     * @param dataPath Plugin data folder
+     * @param langFolder Language folder name for language files.
+     * @param defaultLanguage Default language.
+     */
     public I18nManager(File dataPath, String langFolder, String defaultLanguage) {
         this(new File(dataPath.getPath(), langFolder), defaultLanguage);
     }
 
+    /**
+     * Default Language will be set to en_us.
+     * @param path Language folder.
+     */
     public I18nManager(File path) {
         this(path, "en_us");
     }
 
+    /**
+     * @param path Language folder
+     * @param defaultLanguage Default language.
+     */
     public I18nManager(File path, String defaultLanguage) {
         if (initialize(path, defaultLanguage.toLowerCase()) == StatusCode.success) initialized = true;
     }
@@ -78,6 +91,11 @@ public class I18nManager {
         return StatusCode.success;
     }
 
+    /**
+     * @param lang Target language.
+     * @param key Text key.
+     * @return Localised text.
+     */
     public String getL10n(String lang, String key) {
         if (!initialized) return ""; // 检查 初始化 是否完成
         Map<String, String> langData = languages.get(lang.toLowerCase()); // 获取 指定语言的 数据
@@ -95,10 +113,20 @@ public class I18nManager {
         return langData.get(key); // 返回 指定语言中 的 指定数据
     }
 
+    /**
+     * @param language Target language.
+     * @return L10nGetter
+     */
     public L10nGetter getL10nGetter(String language) {
         return new L10nGetter(language, this);
     }
 
+    /**
+     * @param plugin Plugin instance.
+     * @param folderInJar Language folder in plugin jar.
+     * @param langListFileName File name of language list file in folder "folderInJar".
+     * @param replace Replace existing language files or not
+     */
     public void releaseDefaultLangFile(JavaPlugin plugin, String folderInJar,
                                        String langListFileName, boolean replace) {
         InputStream inputStream = plugin.getResource(folderInJar + "/" + langListFileName); // 获取语言列表文件
@@ -137,6 +165,9 @@ public class I18nManager {
         }
     }
 
+    /**
+     * @return Language list or null for uninitialized.
+     */
     public List<String> getLanguageList() {
         List<String> languageList = new ArrayList<>();
 
@@ -146,6 +177,20 @@ public class I18nManager {
         return languageList;
     }
 
+    /**
+     * For change language setting in config.
+     * @param plugin Plugin instance.
+     * @param sender Sender of this language change operation.
+     * @param lang Now language.
+     * @param targetLanguage Target language. If is null or empty, will send language list to sender.
+     * @param configKey Config key in plugin default config file.
+     * @param langKeyList Language key for message to tell sender what language are available.
+     * @param langKeySuccessSet Language key for message to tell sender that language has been success set.
+     * @param langKeySetFail Language key for message to tell sender that language set operation is failed.
+     * @param langKeySetFailDoesNotExist Language key for message to tell sender that
+     *                                   language set operation is failed by language does not exist.
+     */
+    @Deprecated
     public void setLanguage(JavaPlugin plugin,
                             CommandSender sender,
                             String lang,
@@ -155,7 +200,8 @@ public class I18nManager {
                             String langKeySuccessSet,
                             String langKeySetFail,
                             String langKeySetFailDoesNotExist) {
-        if (targetLanguage == null) {
+        L10nGetter l = this.getL10nGetter(lang);
+        if (targetLanguage == null || targetLanguage.equals("")) {
             List<String> languageList = this.getLanguageList();
             StringBuilder languageListStr = new StringBuilder();
 
@@ -164,7 +210,7 @@ public class I18nManager {
                 languageListStr.append(str).append(isLast ? "." : ", ");
             }
 
-            String finalMessage = this.getL10n(lang, langKeyList)
+            String finalMessage = l.l(langKeyList)
                     .replace("{{languages}}", languageListStr.toString()); // 将语言列表放入消息
 
             sender.sendMessage(finalMessage);
@@ -176,13 +222,13 @@ public class I18nManager {
                 config.set(configKey, targetLanguage);
                 plugin.saveConfig();
 
-                lang = config.getString(configKey);
+                l = this.getL10nGetter(config.getString(configKey));
 
-                message = this.getL10n(lang, langKeySuccessSet);
+                message = l.l(langKeySuccessSet);
             } else {
-                message = this.getL10n(lang, langKeySetFail);
+                message = l.l(langKeySetFail);
                 message += "\n    ";
-                message += this.getL10n(lang, langKeySetFailDoesNotExist);
+                message += l.l(langKeySetFailDoesNotExist);
             }
 
             message = message.replace("{{language}}", targetLanguage);
@@ -199,15 +245,26 @@ public class I18nManager {
         private final String language;
         private final I18nManager i18nManager;
 
+        /**
+         * @param language Target language.
+         * @param i18nManager {@link I18nManager} instance.
+         */
         public L10nGetter(String language, I18nManager i18nManager) {
             this.language = language;
             this.i18nManager = i18nManager;
         }
 
+        /**
+         * @param key Text key.
+         * @return Localised text.
+         */
         public String l(String key) {
             return this.i18nManager.getL10n(this.language, key);
         }
 
+        /**
+         * @return Target language.
+         */
         public String getLanguage() {
             return language;
         }
